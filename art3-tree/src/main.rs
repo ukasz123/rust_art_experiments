@@ -2,6 +2,7 @@ use std::fmt::Debug;
 
 use nannou::{
     color::Alpha,
+    lyon::lyon_tessellation::StrokeOptions,
     noise::{self, NoiseFn, Perlin},
     prelude::*,
 };
@@ -17,18 +18,20 @@ fn main() {
 #[derive(Debug)]
 struct Point {
     coords: Point2,
+    coords_prev: Point2,
     color: Hsl,
     direction: Point2,
     speed: f32,
 }
 
 impl Point {
-    fn new(starting_coords: Point2, color: Hsl, direction: Point2) -> Point {
+    fn new(starting_coords: Point2, color: Hsl, direction: Point2, speed: Option<f32>) -> Point {
         Point {
             coords: starting_coords,
+            coords_prev: starting_coords,
             color,
             direction: direction.normalize(),
-            speed: 1.0,
+            speed: speed.unwrap_or(1.0),
         }
     }
 }
@@ -72,9 +75,11 @@ fn view(app: &App, model: &Model, frame: Frame) {
     draw.rect().hsla(1.0, 1.0, 0.0, 0.01).w_h(model.w, model.h);
     for p in &model.points {
         draw.line()
-            .xy(p.coords)
-            .stroke_weight(2.0)
-            .end(p.coords - p.speed * p.direction)
+            .start(p.coords)
+            .end(p.coords_prev)
+            .caps_round()
+            .stroke_weight(3.0)
+            .join_round()
             .color(p.color);
     }
 
@@ -84,6 +89,7 @@ fn view(app: &App, model: &Model, frame: Frame) {
 
 fn update(_app: &App, model: &mut Model, _update: Update) {
     for p in model.points.iter_mut() {
+        p.coords_prev = p.coords;
         p.coords = p.coords + p.direction * p.speed;
         if (random_range(0.0, 1.0)) < 0.1 {
             let v = NoiseFn::get(&model.noise, [p.coords.x.into(), p.coords.y.into()]);
@@ -117,20 +123,27 @@ fn event(_app: &App, model: &mut Model, event: Event) {
             MouseMoved(pos) => model.mouse_position = Some(pos),
             MousePressed(_) => {
                 if let Some(pos) = model.mouse_position {
-                    let color = hsl(
-                        random_range(0.0, 1.0),
-                        random_range(0.5, 1.0),
-                        random_range(0.4, 0.67),
-                    );
-                    let v = NoiseFn::get(&model.noise, [pos.x.into(), pos.y.into()]);
+                    let rays = random_range(3, 10);
+                    for _ in 0..rays {
+                        let color = hsl(
+                            random_range(0.0, 0.5) * 2.0,
+                            random_range(0.7, 1.0),
+                            random_range(0.5, 0.8),
+                        );
+                        let v = NoiseFn::get(
+                            &model.noise,
+                            [(0.01 * pos.x).into(), (0.01 * pos.y).into()],
+                        );
 
-                    let direction = vec2(0.0, 1.0).rotate((v * TAU_F64).to_f32().unwrap());
-                    model.points.push(Point {
-                        coords: pos,
-                        color,
-                        direction: direction,
-                        speed: random_range(1.0, 3.0),
-                    })
+                        let direction = vec2(0.0, 1.0)
+                            .rotate(v.to_f32().unwrap() * TAU * random_range(0.6, 1.4));
+                        model.points.push(Point::new(
+                            pos,
+                            color,
+                            direction,
+                            Some(random_range(1.0, 4.0)),
+                        ));
+                    }
                 }
             }
             _ => (),
