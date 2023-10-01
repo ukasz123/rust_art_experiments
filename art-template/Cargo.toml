@@ -1,16 +1,16 @@
 [package]
-name = "{{project-name}}"
+name = "{{crate_name}}"
 version = "0.1.0"
 edition = "2021"
 categories = ["wasm"]
 resolver = "2"
 
 [[bin]]
-name = "{{project-name}}"
+name = "{{crate_name}}"
 path = "src/main.rs"
 
 [lib]
-name = "{{project-name}}_web"
+name = "{{crate_name}}_web"
 path = "src/lib.rs"
 crate-type = ["cdylib"]
 
