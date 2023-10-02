@@ -1,0 +1,42 @@
+name: Deploy art to website
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - '.github/workflows/deploy-website.yml'
+      - 'art(\d+).*/**'
+
+permissions:
+  contents: write
+
+
+jobs:
+  art5:
+    defaults:
+      run:
+        working-directory: ./art5-flow-fields
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Install WebAssembly toolchain
+        run: rustup target add wasm32-unknown-unknown
+      - name: Install npm dependencies
+        run: npm install
+        
+      - name: Build app
+        run: npm run build
+              
+      - name: Deploy website 🚀
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: ./art5-flow-fields/dist # The folder the action should deploy.
+          force: false
+          target-folder: website/art5-flow-fields
+          
