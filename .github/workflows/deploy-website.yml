@@ -38,5 +38,5 @@ jobs:
         with:
           folder: ./art5-flow-fields/dist # The folder the action should deploy.
           force: false
-          target-folder: website/art5-flow-fields
+          target-folder: art5-flow-fields
           
