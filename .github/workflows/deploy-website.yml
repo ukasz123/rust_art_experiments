@@ -12,10 +12,10 @@ permissions:
 
 
 jobs:
-  art5:
+  art6-bezier-curve:
     defaults:
       run:
-        working-directory: ./art5-flow-fields
+        working-directory: ./art6-bezier-curves
     runs-on: ubuntu-latest
 
     steps:
@@ -36,7 +36,33 @@ jobs:
       - name: Deploy website 🚀
         uses: JamesIves/github-pages-deploy-action@v4
         with:
+          folder: ./art6-bezier-curves/dist # The folder the action should deploy.
+          force: false
+          target-folder: art6-bezier-curves
+          
+  art5:
+    defaults:
+      run:
+        working-directory: ./art5-flow-fields
+    runs-on: ubuntu-latest  
+    steps:
+      - uses: actions/checkout@v4 
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable 
+      - name: Install WebAssembly toolchain
+        run: rustup target add wasm32-unknown-unknown
+      - name: Install npm dependencies
+        run: npm install
+        
+      - name: Build app
+        run: npm run build
+              
+      - name: Deploy website 🚀
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
           folder: ./art5-flow-fields/dist # The folder the action should deploy.
           force: false
           target-folder: art5-flow-fields
-          
+                  
+        
