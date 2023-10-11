@@ -61,6 +61,7 @@ dependencies = [
  "futures",
  "js-sys",
  "nannou",
+ "shape_builder",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "wasm-bindgen-test",
@@ -1950,6 +1951,13 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
+]
+
+[[package]]
+name = "shape_builder"
+version = "0.1.0"
+dependencies = [
+ "nannou",
 ]
 
 [[package]]

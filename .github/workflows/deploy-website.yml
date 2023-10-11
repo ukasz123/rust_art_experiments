@@ -3,21 +3,43 @@ name: Deploy art to website
 on:
   push:
     branches: [ "main" ]
-    paths:
-      - '.github/workflows/deploy-website.yml'
-      - 'art(\d+).*/**'
 
 permissions:
   contents: write
 
-
 jobs:
-  art6-bezier-curve:
+  changes: 
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.filter.outputs.changes }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Detect file changes
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          base: ${{ github.ref }}
+          filters: |
+            art5-flow-fields:
+                - 'art5-flow-fields/**'
+            art6-bezier-curves:
+                - 'art6-bezier-curves/**'
+            art6-flowers:
+                - 'art6-flowers/**'
+  build-and-deploy:
+    needs: changes
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+          path: ${{ fromJson(needs.changes.outputs.changed) }}
     defaults:
       run:
-        working-directory: ./art6-bezier-curves
-    runs-on: ubuntu-latest
-
+        working-directory: ./${{ matrix.path }}
     steps:
       - uses: actions/checkout@v4
 
@@ -36,33 +58,6 @@ jobs:
       - name: Deploy website 🚀
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: ./art6-bezier-curves/dist # The folder the action should deploy.
+          folder: ./${{ matrix.path }}/dist # The folder the action should deploy.
           force: false
-          target-folder: art6-bezier-curves
-          
-  art5:
-    defaults:
-      run:
-        working-directory: ./art5-flow-fields
-    runs-on: ubuntu-latest  
-    steps:
-      - uses: actions/checkout@v4 
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable 
-      - name: Install WebAssembly toolchain
-        run: rustup target add wasm32-unknown-unknown
-      - name: Install npm dependencies
-        run: npm install
-        
-      - name: Build app
-        run: npm run build
-              
-      - name: Deploy website 🚀
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          folder: ./art5-flow-fields/dist # The folder the action should deploy.
-          force: false
-          target-folder: art5-flow-fields
-                  
-        
+          target-folder: ${{ matrix.path }}
